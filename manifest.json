@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "Aura Startpage",
+  "version": "1.0.0",
+  "description": "Minimalist start page for Brave browser",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  }
+}
