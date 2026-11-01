@@ -49,6 +49,15 @@ export const DEFAULT_SHORTCUTS = [
     row: 1 
   },
   { 
+    id: 'github', 
+    title: 'GitHub', 
+    url: 'https://github.com', 
+    color: '#ffffff', 
+    gradient: ['#ffffff', '#8b949e'], 
+    icon: 'github', 
+    row: 1 
+  },
+  { 
     id: 'lms', 
     title: 'LMS+', 
     url: 'https://lmsplus.xyz/lms/monitor', 
@@ -121,12 +130,43 @@ export function getShortcuts() {
     if (!raw) return DEFAULT_SHORTCUTS;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_SHORTCUTS;
+    let modified = false;
+
     // Auto-migrate LMS+ URL & styling if cached
     const lmsItem = parsed.find(s => s.id === 'lms');
     if (lmsItem && lmsItem.url !== 'https://lmsplus.xyz/lms/monitor') {
       lmsItem.url = 'https://lmsplus.xyz/lms/monitor';
       lmsItem.color = '#d4af37';
       lmsItem.gradient = ['#fef3c7', '#d4af37', '#92400e'];
+      modified = true;
+    }
+
+    // Auto-migrate GitHub shortcut if missing in cached storage
+    if (!parsed.some(s => s.id === 'github')) {
+      const githubItem = {
+        id: 'github',
+        title: 'GitHub',
+        url: 'https://github.com',
+        color: '#ffffff',
+        gradient: ['#ffffff', '#8b949e'],
+        icon: 'github',
+        row: 1
+      };
+      const linkedinIdx = parsed.findIndex(s => s.id === 'linkedin');
+      if (linkedinIdx !== -1) {
+        parsed.splice(linkedinIdx + 1, 0, githubItem);
+      } else {
+        const lmsIdx = parsed.findIndex(s => s.id === 'lms');
+        if (lmsIdx !== -1) {
+          parsed.splice(lmsIdx, 0, githubItem);
+        } else {
+          parsed.push(githubItem);
+        }
+      }
+      modified = true;
+    }
+
+    if (modified) {
       saveShortcuts(parsed);
     }
     return parsed;

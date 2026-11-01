@@ -2,13 +2,11 @@
 
 Personal custom start page for my Brave browser profile. This repository is strictly for personal backup of my page.
 
-It replaces NightTab with a local unpacked extension. Shows my daily bookmarks in a simple 6x2 grid with SVG icons and a small theme switcher in the bottom-right corner.
+It replaces NightTab with a local unpacked extension. Shows my daily bookmarks in a responsive grid with SVG icons and a small theme switcher in the bottom-right corner.
 
 ### Preview
 
 ![Navy Signature](images/navy-signature.png)
-
-![Cyberpunk Neon](images/cyberpunk-neon.png)
 
 ### Setup
 

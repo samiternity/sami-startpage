@@ -7,14 +7,32 @@
   --tile-border: rgba(30, 58, 102, 0.75);
   --tile-bevel: rgba(255, 255, 255, 0.05);
   --icon-color: #ffffff;
-  --tile-radius: 6px;
-  --tile-size: 132px;
-  --grid-gap: 22px;
-  --icon-size: 46px;
+  --tile-radius: clamp(6px, 0.7vw, 8px);
+  --tile-size: clamp(74px, min(10.8vw, 18vh), 132px);
+  --grid-gap: clamp(10px, 1.6vw, 22px);
+  --icon-size: clamp(28px, 3.8vw, 46px);
   --toolbar-bg: rgba(13, 20, 36, 0.85);
   --toolbar-border: rgba(30, 58, 102, 0.75);
   --ease-spring: cubic-bezier(0.2, 0.85, 0.32, 1.2);
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 679px) {
+  :root {
+    --tile-size: clamp(84px, min(25vw, 16vh), 126px);
+    --grid-gap: clamp(12px, 2.5vw, 18px);
+    --icon-size: clamp(32px, 7vw, 44px);
+    --tile-radius: 7px;
+  }
+}
+
+@media (max-width: 419px) {
+  :root {
+    --tile-size: clamp(76px, min(38vw, 13vh), 118px);
+    --grid-gap: clamp(10px, 3vw, 16px);
+    --icon-size: clamp(28px, 11vw, 40px);
+    --tile-radius: 6px;
+  }
 }
 
 *, *::before, *::after {
@@ -25,8 +43,12 @@
 
 html, body {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: radial-gradient(ellipse 85% 75% at 50% 50%, var(--bg-radial-1) 0%, var(--bg-radial-2) 65%, var(--bg-radial-3) 100%);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   user-select: none;
@@ -36,19 +58,42 @@ html, body {
 
 body {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-/* Layout container with optical vertical balance */
+/* Subtle, elegant dark scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+/* Layout container with optical vertical balance and safe toolbar clearance */
 .startpage-root {
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 100%;
-  padding-bottom: 3.5vh;
+  max-width: 100%;
+  padding: clamp(20px, 4vh, 40px) 16px clamp(64px, 8vh, 84px);
+  box-sizing: border-box;
 }
 
 /* Grid system */
@@ -56,19 +101,42 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--grid-gap);
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
 }
 
 .grid-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--grid-gap);
-  align-items: center;
   justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .grid-row {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 639px) {
+  .grid-row {
+    max-width: calc(4 * var(--tile-size) + 3 * var(--grid-gap));
+  }
+}
+
+@media (max-width: 440px) {
+  .grid-row {
+    max-width: calc(2 * var(--tile-size) + 1 * var(--grid-gap));
+  }
 }
 
 /* Tile */
 .tile {
   width: var(--tile-size);
   height: var(--tile-size);
+  flex-shrink: 0;
   aspect-ratio: 1 / 1;
   background: var(--tile-bg);
   border: 1px solid var(--tile-border);
@@ -193,6 +261,7 @@ body {
 [data-icon-mode="gradient"] .tile[data-id="youtube"] svg path { fill: url(#grad-youtube); }
 [data-icon-mode="gradient"] .tile[data-id="ytmusic"] svg path { fill: url(#grad-ytmusic); }
 [data-icon-mode="gradient"] .tile[data-id="linkedin"] svg path { fill: url(#grad-linkedin); }
+[data-icon-mode="gradient"] .tile[data-id="github"] svg path { fill: url(#grad-github); }
 [data-icon-mode="gradient"] .tile[data-id="lms"] .lms-anchor-body { fill: #ffffff; }
 [data-icon-mode="gradient"] .tile[data-id="lms"] .lms-anchor-gold { fill: url(#grad-lms); }
 [data-icon-mode="gradient"] .tile[data-id="grok"] svg path { fill: url(#grad-grok); }
@@ -202,16 +271,8 @@ body {
 [data-icon-mode="gradient"] .tile[data-id="claude"] svg path { fill: url(#grad-claude); }
 [data-icon-mode="gradient"] .tile[data-id="perplexity"] svg path { fill: url(#grad-perplexity); }
 
-/* 4. Cyberpunk Neon Gradient Mode */
-[data-icon-mode="cyber-gradient"] .tile:not([data-id="lms"]) svg path { fill: url(#grad-theme-cyber); }
-[data-icon-mode="cyber-gradient"] .tile[data-id="lms"] .lms-anchor-body,
-[data-icon-mode="cyber-gradient"] .tile[data-id="lms"] .lms-anchor-gold {
-  fill: url(#grad-theme-cyber) !important;
-}
-
 /* In gradient modes, boost icon bloom on hover */
-[data-icon-mode="gradient"] .tile:hover .tile-icon,
-[data-icon-mode="cyber-gradient"] .tile:hover .tile-icon {
+[data-icon-mode="gradient"] .tile:hover .tile-icon {
   filter: drop-shadow(0 0 14px var(--brand-color));
 }
 
@@ -221,8 +282,8 @@ body {
 
 .toolbar {
   position: fixed;
-  bottom: 22px;
-  right: 26px;
+  bottom: clamp(14px, 3vh, 22px);
+  right: clamp(14px, 3vw, 26px);
   z-index: 100;
 }
 
@@ -288,6 +349,7 @@ body {
   bottom: 52px;
   right: 0;
   width: 250px;
+  max-width: calc(100vw - 32px);
   background: var(--toolbar-bg);
   border: 1px solid var(--toolbar-border);
   border-radius: 12px;

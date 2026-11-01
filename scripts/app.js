@@ -39,7 +39,6 @@ function injectSvgGradients(shortcuts) {
 
   // Global theme gradients
   const themeGradients = [
-    { id: 'grad-theme-cyber', stops: ['#ff007f', '#00f0ff'] },
     { id: 'grad-theme-aurora', stops: ['#2dd4bf', '#38bdf8'] },
     { id: 'grad-theme-sunset', stops: ['#f59e0b', '#f43f5e'] }
   ];
@@ -117,33 +116,131 @@ function init() {
 
 function setupKeyboardNavigation() {
   document.addEventListener('keydown', (e) => {
+    const tiles = Array.from(document.querySelectorAll('.tile'));
+    if (!tiles.length) return;
+
     const active = document.activeElement;
-    if (!active || !active.classList.contains('tile')) {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        const first = document.querySelector('.tile');
-        if (first) {
-          first.focus();
-          e.preventDefault();
-        }
+    const isTile = active && active.classList.contains('tile');
+
+    if (!isTile) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+        tiles[0].focus();
+        e.preventDefault();
       }
       return;
     }
 
-    const currentRow = parseInt(active.dataset.row, 10);
-    const currentCol = parseInt(active.dataset.col, 10);
+    if (e.key === 'Home') {
+      e.preventDefault();
+      tiles[0].focus();
+      return;
+    }
+
+    if (e.key === 'End') {
+      e.preventDefault();
+      tiles[tiles.length - 1].focus();
+      return;
+    }
+
+    const currentRect = active.getBoundingClientRect();
+    const currentCenter = {
+      x: currentRect.left + currentRect.width / 2,
+      y: currentRect.top + currentRect.height / 2
+    };
 
     let nextTarget = null;
+    const currentIndex = tiles.indexOf(active);
 
     if (e.key === 'ArrowRight') {
-      nextTarget = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${currentCol + 1}"]`)
-        || document.querySelector(`.tile[data-row="${currentRow === 1 ? 2 : 1}"][data-col="0"]`);
+      // Find candidate to the right on roughly the same row
+      const candidates = tiles.filter(t => {
+        if (t === active) return false;
+        const r = t.getBoundingClientRect();
+        const cy = r.top + r.height / 2;
+        const cx = r.left + r.width / 2;
+        return cx > currentCenter.x + 5 && Math.abs(cy - currentCenter.y) < currentRect.height * 0.45;
+      });
+
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+        nextTarget = candidates[0];
+      } else {
+        // Wrap to next tile in linear order
+        nextTarget = tiles[(currentIndex + 1) % tiles.length];
+      }
     } else if (e.key === 'ArrowLeft') {
-      nextTarget = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${currentCol - 1}"]`)
-        || document.querySelector(`.tile[data-row="${currentRow === 1 ? 2 : 1}"][data-col="5"]`);
+      // Find candidate to the left on roughly the same row
+      const candidates = tiles.filter(t => {
+        if (t === active) return false;
+        const r = t.getBoundingClientRect();
+        const cy = r.top + r.height / 2;
+        const cx = r.left + r.width / 2;
+        return cx < currentCenter.x - 5 && Math.abs(cy - currentCenter.y) < currentRect.height * 0.45;
+      });
+
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right);
+        nextTarget = candidates[0];
+      } else {
+        // Wrap to previous tile in linear order
+        nextTarget = tiles[(currentIndex - 1 + tiles.length) % tiles.length];
+      }
     } else if (e.key === 'ArrowDown') {
-      nextTarget = document.querySelector(`.tile[data-row="2"][data-col="${currentCol}"]`);
+      // Find candidates strictly below current tile
+      const below = tiles.filter(t => {
+        if (t === active) return false;
+        const r = t.getBoundingClientRect();
+        const cy = r.top + r.height / 2;
+        return cy > currentCenter.y + currentRect.height * 0.4;
+      });
+
+      if (below.length > 0) {
+        const minDy = Math.min(...below.map(t => {
+          const r = t.getBoundingClientRect();
+          return (r.top + r.height / 2) - currentCenter.y;
+        }));
+        const nextRowCandidates = below.filter(t => {
+          const r = t.getBoundingClientRect();
+          const dy = (r.top + r.height / 2) - currentCenter.y;
+          return Math.abs(dy - minDy) < currentRect.height * 0.45;
+        });
+        nextRowCandidates.sort((a, b) => {
+          const ra = a.getBoundingClientRect();
+          const rb = b.getBoundingClientRect();
+          const dxa = Math.abs((ra.left + ra.width / 2) - currentCenter.x);
+          const dxb = Math.abs((rb.left + rb.width / 2) - currentCenter.x);
+          return dxa - dxb;
+        });
+        nextTarget = nextRowCandidates[0];
+      }
     } else if (e.key === 'ArrowUp') {
-      nextTarget = document.querySelector(`.tile[data-row="1"][data-col="${currentCol}"]`);
+      // Find candidates strictly above current tile
+      const above = tiles.filter(t => {
+        if (t === active) return false;
+        const r = t.getBoundingClientRect();
+        const cy = r.top + r.height / 2;
+        return cy < currentCenter.y - currentRect.height * 0.4;
+      });
+
+      if (above.length > 0) {
+        const minDy = Math.min(...above.map(t => {
+          const r = t.getBoundingClientRect();
+          return currentCenter.y - (r.top + r.height / 2);
+        }));
+        const prevRowCandidates = above.filter(t => {
+          const r = t.getBoundingClientRect();
+          const dy = currentCenter.y - (r.top + r.height / 2);
+          return Math.abs(dy - minDy) < currentRect.height * 0.45;
+        });
+        prevRowCandidates.sort((a, b) => {
+          const ra = a.getBoundingClientRect();
+          const rb = b.getBoundingClientRect();
+          const dxa = Math.abs((ra.left + ra.width / 2) - currentCenter.x);
+          const dxb = Math.abs((rb.left + rb.width / 2) - currentCenter.x);
+          return dxa - dxb;
+        });
+        nextTarget = prevRowCandidates[0];
+      }
     }
 
     if (nextTarget) {

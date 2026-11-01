@@ -37,23 +37,6 @@ export const THEMES = [
     }
   },
   {
-    id: 'cyberpunk',
-    name: 'Cyberpunk Neon',
-    desc: 'Pitch OLED black with neon charge',
-    dotColor: '#00f0ff',
-    iconMode: 'cyber-gradient',
-    vars: {
-      '--bg-radial-1': '#180829',
-      '--bg-radial-2': '#080511',
-      '--bg-radial-3': '#020105',
-      '--tile-bg': 'linear-gradient(180deg, rgba(28, 12, 48, 0.8) 0%, rgba(12, 5, 22, 0.8) 100%)',
-      '--tile-border': 'rgba(120, 40, 180, 0.65)',
-      '--tile-bevel': 'rgba(255, 0, 128, 0.15)',
-      '--toolbar-bg': 'rgba(20, 8, 36, 0.85)',
-      '--toolbar-border': 'rgba(120, 40, 180, 0.65)'
-    }
-  },
-  {
     id: 'navy-brands',
     name: 'Navy Signature',
     desc: 'Original navy · Signature brand icon colors',
@@ -69,29 +52,17 @@ export const THEMES = [
       '--toolbar-bg': 'rgba(13, 20, 36, 0.85)',
       '--toolbar-border': 'rgba(30, 58, 102, 0.75)'
     }
-  },
-  {
-    id: 'stealth',
-    name: 'Titanium Stealth',
-    desc: 'Pure achromatic matte graphite',
-    dotColor: '#a1a1aa',
-    iconMode: 'monochrome',
-    vars: {
-      '--bg-radial-1': '#18181b',
-      '--bg-radial-2': '#09090b',
-      '--bg-radial-3': '#000000',
-      '--tile-bg': 'linear-gradient(180deg, rgba(28, 28, 32, 0.8) 0%, rgba(14, 14, 16, 0.8) 100%)',
-      '--tile-border': 'rgba(63, 63, 70, 0.75)',
-      '--tile-bevel': 'rgba(255, 255, 255, 0.06)',
-      '--toolbar-bg': 'rgba(20, 20, 22, 0.85)',
-      '--toolbar-border': 'rgba(63, 63, 70, 0.75)'
-    }
   }
 ];
 
 export function getCurrentTheme() {
   const saved = localStorage.getItem(THEME_STORAGE_KEY);
-  return THEMES.find(t => t.id === saved) || THEMES[0];
+  const found = THEMES.find(t => t.id === saved);
+  if (!found) {
+    localStorage.setItem(THEME_STORAGE_KEY, THEMES[0].id);
+    return THEMES[0];
+  }
+  return found;
 }
 
 export function applyTheme(themeId) {
